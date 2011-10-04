@@ -57,14 +57,28 @@
 
 (define (extn? in byte)
   (let* (; img descriptor marker (should be 0x21)
-         [id-0 (peek-byte in byte)])
-    (if (equal? id-0 33)
-        (begin 
-          (printf "extn at ~a\n" byte)
-          (printf "type: ~a\n" (peek-byte in (+ byte 1)))
-          #t)
-        ; HEY CHRIS
-        ; tomorrow: make extn? behave according to type
+         [id-0 (peek-byte in byte)]
+         ; 2nd byte labels extension type
+         [id-1 (peek-byte in (+ byte 1))]
+         ; 3rd byte is often block size
+         [id-2 (peek-byte in (+ byte 2))])
+    (if [equal? id-0 33]
+        ; extension types:
+        (cond [(and
+                (equal? id-1 255)
+                (equal? id-2 11))
+               #t] ; application
+              [(equal? id-1 254)
+               #t] ; comment
+              [(and
+                (equal? id-1 249)
+                (equal? id-2 4))
+               #t] ; graphic control
+              [(and
+                (equal? id-1 1)
+                (equal? id-1 12))
+               #t] ; plain text
+              [else #f])
         #f)))
 
 (define (img-size in byte)

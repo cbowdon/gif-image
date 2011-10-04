@@ -3,7 +3,7 @@
 (require rackunit
          "gif-split.rkt")
 
-(define cwd (string->path "/Users/chris/Projects/gif-split/"))
+(define cwd (string->path "/Users/chris/Projects/gif-image/"))
 
 (define sunflower "images/Sunflower_as_gif_websafe.gif")
 (define sample "images/sample.gif")
@@ -24,7 +24,7 @@
 
 
 (test-case
- "Can accurately find global-color-table-size"
+ "Can accurately find gif: global-color-table-size"
  (check-equal? (gif: gct-size sunflower) 256)
  (check-equal? (gif: gct-size earth) 256)
  (check-equal? (gif: gct-size sample) 4))
@@ -42,8 +42,10 @@
  (check-equal? (gif: img? earth 850) #f))
 
 (test-case
- "gif: img-size returns the bytes of an image"
- (let ([img-size (- 37563 808)])
-   (check-equal? (gif: img-size earth 808) img-size)))
+ "gif: img-size returns the bytes of an image (one frame)"
+ (let ([actual-size (- 37563 808)]
+       [calcd-size (gif: img-size earth 808)])
+   ; note that subsequent frames may be smaller
+   (check-equal? calcd-size actual-size)))
 
 
