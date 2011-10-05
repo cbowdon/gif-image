@@ -59,10 +59,15 @@
 
 (test-case
  "gif: img-size returns the number of bytes of an image (one frame)"
- (let ([actual-size (- 37563 808)]
-       [calcd-size (gif: img-size earth 808)])
+ (let ([actual-size-1 (- 37563 808)]
+       [calcd-size-1 (gif: img-size earth 808)]
+       [actual-size-2 (- 73553 37571)]
+       [calcd-size-2 (gif: img-size earth 37571)])
    ; note that subsequent frames may be diff size
-   (check-equal? calcd-size actual-size)))
+   (check-equal? (gif: img? earth 808) #t)
+   (check-equal? calcd-size-1 actual-size-1)
+   (check-equal? (gif: img? earth 37571) #t)
+   (check-equal? calcd-size-2 actual-size-2)))
 
 (test-case
  "gif: img returns a complete image descriptor"
