@@ -22,6 +22,11 @@
  (check-equal? (gif: version sample) "89a")
  (check-equal? (gif: version earth) "89a"))
 
+(test-case
+ "gif: logical-size correct"
+ (check-equal? (gif: logical-size earth) (cons 400 400))
+ (check-equal? (gif: logical-size sunflower) (cons 250 297))
+ (check-equal? (gif: logical-size sample) (cons 3 3)))
 
 (test-case
  "Can accurately find gif: global-color-table-size"
@@ -55,7 +60,9 @@
 (test-case
  "gif: img? recognises an image-descriptor"
  (check-equal? (gif: img? earth 808) #t)
- (check-equal? (gif: img? earth 850) #f))
+ (check-equal? (gif: img? earth 850) #f)
+ (check-equal? (gif: img? earth 37571) #t)
+ (check-equal? (gif: img? earth 1391491) #t))
 
 (test-case
  "gif: img-size returns the number of bytes of an image (one frame)"
@@ -82,7 +89,12 @@
 
 (test-case
  "gif: frames returns 44 images from earth"
- (check-equal? (length (gif: frames earth)) 44))
+ (check-equal? (length (gif: frames earth)) 44)
+ (check-equal? (length (gif: frames sample)) 1)
+ (check-equal? (length (gif: frames sunflower)) 1))
+
+(require profile)
+(profile-thunk (lambda () (gif: frames earth)))
 
 
 
