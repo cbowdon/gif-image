@@ -35,6 +35,12 @@
  (check-equal? (gif: gct-size sample) 4))
 
 (test-case
+ "gif: header grabs up to the end of the global color table"
+ (check-equal? (bytes-length (gif: header earth)) 780)
+ (check-equal? (bytes-length (gif: header sunflower)) 780)
+ (check-equal? (bytes-length (gif: header sample)) 24))
+
+(test-case
  "gif: trailer? recognises EOF"
  (check-equal? (gif: trailer? sunflower (- (file-size sunflower) 1)) #t)
  (check-equal? (gif: trailer? sample (- (file-size sample) 1)) #t)
@@ -89,12 +95,27 @@
 
 (test-case
  "gif: frames returns 44 images from earth"
- (check-equal? (length (gif: frames earth)) 44)
- (check-equal? (length (gif: frames sample)) 1)
- (check-equal? (length (gif: frames sunflower)) 1))
+ (let ([stills (gif: frames earth)])
+   (check-equal? (length stills) 44)
+   (check-equal? (length (gif: frames sample)) 1)
+   (check-equal? (length (gif: frames sunflower)) 1)))
 
-(require profile)
-(profile-thunk (lambda () (gif: frames earth)))
+(test-case
+ "gif: build can create valid images"
+ (let* ([input-name sample]
+        [hdr (gif: header input-name)]
+        [stills (gif: frames input-name)]
+        [output-name "images/my.gif"])
+   (when [file-exists? output-name]
+     (delete-file output-name))
+   (gif-build hdr (car stills) output-name)
+   (check-equal? (gif? output-name) #t)
+   (check-equal? (gif: version output-name) (gif: version input-name))
+   (check-equal? (gif: version output-name) (gif: version input-name))
+   (check-equal? (length (gif: frames output-name)) 1)))
+
+; (require profile)
+; (profile-thunk (lambda () (gif: frames earth)))
 
 
 

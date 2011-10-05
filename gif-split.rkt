@@ -4,6 +4,7 @@
          version
          logical-size
          gct-size
+         header
          trailer?
          gce?
          gce
@@ -12,6 +13,7 @@
          img-dimensions
          img
          frames
+         gif-build
          gif:)
 
 (require "bits-and-bytes.rkt")
@@ -44,6 +46,9 @@
                (eighth packed-field))])
     (expt 2 i)))
 
+(define (header data)
+  (subbytes data 0 (+ 12 (* 3 (gct-size data)))))
+
 (define (trailer? data byte) 
   (and
    (equal? byte (- (bytes-length data) 1))
@@ -60,7 +65,11 @@
         (if [equal? id-0 33]
             ; extension types:
             (cond [(equal? id-1 254) #t] ; comment
-                  [(gce? data byte) #t] ; graphic control
+                  [(and
+                    (equal? id-0 33)
+                    (equal? id-1 249)
+                    (equal? id-2 4))
+                   #t] ; graphic control
                   [(and
                     (equal? id-1 255)
                     (equal? id-2 11))
@@ -123,13 +132,11 @@
         ; termination byte of img descriptor header
         ;[id-term (bytes-ref data (+ byte 9 lct-size))])
         (and
-         (equal? id-0 44)
-         (<= (car idims) (car gdims))
-         (<= (cdr idims) (cdr gdims))
-         (<= (car corner) (car gdims))
-         (<= (cdr corner) (cdr gdims))
-         ;(equal? id-term 0)
-         ))
+          (equal? id-0 44)
+          (<= (car idims) (car gdims))
+          (<= (cdr idims) (cdr gdims))
+          (<= (car corner) (car gdims))
+          (<= (cdr corner) (cdr gdims))))
       #f))
 
 (define (img-size data byte)
@@ -146,6 +153,9 @@
     ; loop through data until not data
     (define (img-size-iter b)
       (cond [(or
+              ; more efficiency here would be
+              ; a let with the bytes-refs
+              ; and pass these to the preds
               (trailer? data b)
               (img? data b)
               (extn? data b))
@@ -181,6 +191,10 @@
           [else (sbs-iter (+ byte 1) sbs)]))
   (sbs-iter 0 '()))
 
+; ???
+(define (gif-build hdr img filename-out)
+  (call-with-output-file filename-out
+    (lambda (out) (write-bytes (bytes-append hdr img #";") out))))
 
 ; ahh
 (define-syntax-rule
