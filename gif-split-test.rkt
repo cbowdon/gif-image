@@ -37,15 +37,49 @@
  (check-equal? (gif: trailer? earth 4) #f))
 
 (test-case
+ "gif: gce? recognises graphic control extension"
+ (check-equal? (gif: gce? earth 800) #t))
+
+(test-case
+ "gif: gce returns a complete graphic control extension"
+ (let* ([the-gce (gif: gce earth 800)]
+        [gce-len (bytes-length the-gce)]
+        [head-byte (bytes-ref the-gce 0)]
+        [second-byte (bytes-ref the-gce 1)]
+        [term-byte (bytes-ref the-gce (- gce-len 1))])
+   (check-equal? gce-len 7)
+   (check-equal? head-byte 33)
+   (check-equal? second-byte 249)
+   (check-equal? term-byte 0)))
+
+(test-case
  "gif: img? recognises an image-descriptor"
  (check-equal? (gif: img? earth 808) #t)
  (check-equal? (gif: img? earth 850) #f))
 
 (test-case
- "gif: img-size returns the bytes of an image (one frame)"
+ "gif: img-size returns the number of bytes of an image (one frame)"
  (let ([actual-size (- 37563 808)]
        [calcd-size (gif: img-size earth 808)])
-   ; note that subsequent frames may be smaller
+   ; note that subsequent frames may be diff size
    (check-equal? calcd-size actual-size)))
+
+(test-case
+ "gif: img returns a complete image descriptor"
+ (let* ([actual-size (- 37563 808)]
+        [the-img (gif: img earth 808)]
+        [img-len (bytes-length the-img)]
+        [head-byte (bytes-ref the-img 0)]
+        [term-byte (bytes-ref the-img (- img-len 1))])
+   (check-equal? img-len actual-size)
+   (check-equal? head-byte 44)
+   (check-equal? term-byte 0)))
+
+(test-case
+ "gif: frames returns 44 images from earth"
+ (check-equal? (length (gif: frames earth)) 44))
+
+
+
 
 

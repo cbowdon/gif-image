@@ -4,8 +4,13 @@
          version
          gct-size
          trailer?
+         gce?
+         gce
          img?
          img-size
+         img-dimensions
+         img
+         frames
          gif:)
 
 (require "bits-and-bytes.rkt")
@@ -32,10 +37,50 @@
      (equal? eof-0 59)
      (equal? eof-1 eof))))
 
+(define (extn? in byte)
+  (let* (; img descriptor marker (should be 0x21)
+         [id-0 (peek-byte in byte)]
+         ; 2nd byte labels extension type
+         [id-1 (peek-byte in (+ byte 1))]
+         ; 3rd byte is often block size
+         [id-2 (peek-byte in (+ byte 2))])
+    (if [equal? id-0 33]
+        ; extension types:
+        (cond [(equal? id-1 254) #t] ; comment
+              [(gce? in byte) #t] ; graphic control
+              [(and
+                (equal? id-1 255)
+                (equal? id-2 11))
+               #t] ; application
+              [(and
+                (equal? id-1 1)
+                (equal? id-1 12))
+               #t] ; plain text
+              [else #f])
+        #f)))
+
+(define (gce? in byte)
+  (let (; first byte should be extn marker
+        [id-0 (peek-byte in byte)]
+        ; graphic control extension marker
+        [id-1 (peek-byte in (+ byte 1))]
+        ; size marker is always 4
+        [id-2 (peek-byte in (+ byte 2))]
+        ; termination byte
+        [id-6 (peek-byte in (+ byte 6))])
+    (and
+     (equal? id-0 33)
+     (equal? id-1 249)
+     (equal? id-2 4)
+     (equal? id-6 0))))
+
+(define (gce in byte)
+  (if [gce? in byte]
+      (peek-bytes 7 byte in)
+      (error "Not a graphic control extension")))
+
 (define (img? in byte)
-  (let* (; preceding byte (should be termination byte: 0)
-         [id-m1 (peek-byte in (- byte 1))]
-         ; img descriptor marker (should be 0x2C)
+  (let* (; img descriptor marker (should be 0x2C)
          [id-0 (peek-byte in byte)]
          ; packed fields in img descriptor
          [id-9 (byte->bits (peek-byte in (+ byte 9)))]
@@ -51,35 +96,8 @@
          ; termination byte of img descriptor header
          [id-term (peek-byte in (+ byte 9 lct-size))])
     (and
-     (equal? id-m1 0)
      (equal? id-0 44)
      (equal? id-term 0))))
-
-(define (extn? in byte)
-  (let* (; img descriptor marker (should be 0x21)
-         [id-0 (peek-byte in byte)]
-         ; 2nd byte labels extension type
-         [id-1 (peek-byte in (+ byte 1))]
-         ; 3rd byte is often block size
-         [id-2 (peek-byte in (+ byte 2))])
-    (if [equal? id-0 33]
-        ; extension types:
-        (cond [(and
-                (equal? id-1 255)
-                (equal? id-2 11))
-               #t] ; application
-              [(equal? id-1 254)
-               #t] ; comment
-              [(and
-                (equal? id-1 249)
-                (equal? id-2 4))
-               #t] ; graphic control
-              [(and
-                (equal? id-1 1)
-                (equal? id-1 12))
-               #t] ; plain text
-              [else #f])
-        #f)))
 
 (define (img-size in byte)
   (let* (; packed fields in img descriptor
@@ -104,6 +122,54 @@
               [else 
                (iter in (+ b val 1))])))
     (iter in data-first))) 
+
+; data on images
+(define (img-dimensions in byte)
+  (if [img? in byte]
+      (extract-coord in (+ byte 5))
+      (error "Not an image descriptor")))
+(define (img-corner in byte)
+  (if [img? in byte]
+      (extract-coord in (+ byte 1))
+      (error "Not an image descriptor")))
+
+; extract any pair of unsigned shorts
+(define (extract-coord in byte)
+  (let ([x0 (peek-byte in byte)]
+        [x1 (peek-byte in (+ byte 1))]
+        [y0 (peek-byte in (+ byte 2))]
+        [y1 (peek-byte in (+ byte 3))])
+    (cons
+     (+ x0 (* x1 256))
+     (+ y0 (* y1 256)))))
+
+; returns bytes of the image
+(define (img in byte)
+  (if [img? in byte]
+      (peek-bytes (img-size in byte) byte in)
+      (error "Not an image descriptor" byte)))
+
+; return frames
+(define (frames in)
+ (subblocks in gce? (lambda (in b) 7) gce))
+ ; (subblocks in img? img-size img))
+
+; return all instances of a particular kind of subblock
+(define (subblocks in pred? size get)
+  (define (iter byte sbs)
+    (cond [(trailer? in byte) sbs]
+          [(pred? in byte) 
+           (begin
+             (printf "~a:\t~a\t~a\t~a\t" 
+                     (+ (length sbs) 1) 
+                     byte 
+                     (size in byte) 
+                     (extract-coord in (+ byte 5)))
+             (printf "+8:img? ~a\n" (img? in (+ byte 8)))
+             (iter (+ byte (size in byte)) (cons (get in byte) sbs)))]
+          [else (iter (+ byte 1) sbs)]))
+  (iter 0 '()))
+
 
 ; ahh
 (define-syntax-rule
