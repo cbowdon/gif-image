@@ -18,16 +18,20 @@
          img?
          img-size
          img-dimensions
-         images
+         frames
          timings
+         comments
+         animated?
          gif-build
+         images
          gif:)
 
 (require "bits-and-bytes.rkt")
 
-(define (gif? filename)
-  (call-with-input-file filename
-    (lambda (in) (equal? (read-bytes 3 in) #"GIF"))))
+(define (gif? data)
+    (and
+     (equal? (subbytes data 0 3) #"GIF")
+     (equal? (bytes-ref data (- (bytes-length data) 1)) 59)))
 
 (define (version data)
   (bytes->string/utf-8 (subbytes data 3 (+ 3 3))))
@@ -43,9 +47,9 @@
 
 ; extract any pair of unsigned shorts
 (define (extract-coord data byte)
-    (cons
-     (extract-short data byte)
-     (extract-short data (+ byte 2))))
+  (cons
+   (extract-short data byte)
+   (extract-short data (+ byte 2))))
 
 (define (gct-size data)
   (let* ([packed-field (byte->bits (bytes-ref data 10))]
@@ -242,13 +246,24 @@
   (sbs-iter 0 '()))
 
 ; return frames
-(define (images data)
+(define (frames data)
   (subblocks data img? img-size))
 ;(subblocks data gce? (lambda (data byte) 7)))
+
+; is animated?
+(define (animated? data)
+  (> (stream-length (images data)) 1))
 
 ; return times in every gce
 (define (timings data)
   (stream-map (lambda (x) (gce-time x 0)) (subblocks data gce? gce-size)))  
+
+; return all the comments
+(define (comments data)
+  (stream-map 
+   ; assumes no comment > 256 bytes
+   (lambda (x) (bytes->string/utf-8 (subbytes x 3 (- (bytes-length x) 1)))) 
+   (subblocks data comment? comment-size)))
 
 ; make a gif
 (define (gif-build filename-out hdr blocks)
@@ -257,6 +272,12 @@
       (if [or (stream? blocks) (list? blocks)]
           (write-bytes (bytes-append (apply bytes-append hdr (stream->list blocks)) #";") out)
           (write-bytes (bytes-append hdr blocks #";") out)))))
+
+; valid images of all
+(define (images data)
+  (stream-map
+   (lambda (x) (bytes-append (header data) x #";"))
+   (subblocks data img? img-size)))
 
 ; ahh
 (define-syntax-rule
