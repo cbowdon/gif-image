@@ -40,14 +40,17 @@
 
 (define (gct-size data)
   (let* ([packed-field (byte->bits (bytes-ref data 10))]
-         [i (+ 1 
-               (* 4 (sixth packed-field)) 
-               (* 2 (seventh packed-field))
-               (eighth packed-field))])
+         [flag (first packed-field)]
+         [i (+ 1
+               (* flag ; could be b&w
+                  (+ 
+                   (* 4 (sixth packed-field)) 
+                   (* 2 (seventh packed-field))
+                   (eighth packed-field))))])
     (expt 2 i)))
 
 (define (header data)
-  (subbytes data 0 (+ 12 (* 3 (gct-size data)))))
+  (subbytes data 0 (+ 12 (* 3 (gct-size data)) 1)))
 
 (define (trailer? data byte) 
   (and
@@ -132,11 +135,11 @@
         ; termination byte of img descriptor header
         ;[id-term (bytes-ref data (+ byte 9 lct-size))])
         (and
-          (equal? id-0 44)
-          (<= (car idims) (car gdims))
-          (<= (cdr idims) (cdr gdims))
-          (<= (car corner) (car gdims))
-          (<= (cdr corner) (cdr gdims))))
+         (equal? id-0 44)
+         (<= (car idims) (car gdims))
+         (<= (cdr idims) (cdr gdims))
+         (<= (car corner) (car gdims))
+         (<= (cdr corner) (cdr gdims))))
       #f))
 
 (define (img-size data byte)
@@ -149,10 +152,16 @@
                                   (* 2 (seventh id-9))
                                   (eighth id-9)))
                        0)]
-         [data-first (+ byte 9 lct-size 1)])
+         ; LZW-min-size 
+         [LZW-min (+ byte 9 lct-size 1)]
+         ; first byte of data subblocks
+         [data-first (+ byte 9 lct-size 2)]
+         ; length of file
+         [len (bytes-length data)])
     ; loop through data until not data
     (define (img-size-iter b)
-      (cond [(or
+      (cond [(> b len) (error "img-size: exceeded EOF")]
+            [(or
               ; more efficiency here would be
               ; a let with the bytes-refs
               ; and pass these to the preds
@@ -161,7 +170,9 @@
               (extn? data b))
              (- b byte)]
             [else 
-             (img-size-iter (+ b 1))]))
+             ; jumps over subblocks
+             ; potential for error here
+             (img-size-iter (+ b (bytes-ref data b) 1))]))
     (img-size-iter data-first))) 
 
 ; data on image descriptors
@@ -180,6 +191,7 @@
 ; return frames
 (define (frames data)
   (subblocks data img? img-size))
+;(subblocks data gce? (lambda (data byte) 7)))
 
 ; return all instances of a particular kind of subblock
 (define (subblocks data pred? size)
