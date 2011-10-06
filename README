@@ -3,12 +3,17 @@ What it is:
 - extract still images, metadata, recombine
 - stepping stone to Obj-C code to do same
 
-Descriptions:
+Description:
+
+There's plenty of "make animated GIF" apps around, but none that let you split an existing animated GIF up, play around with it and then reassemble it. This could be something vaguely useful and fun.
+
+This was intended to be a moderately challenging project for getting to grips with Objective-C and Xcode. But after a few hours work in Obj-C, I realised that not knowing the GIF spec was the bigger problem, so I decided to tackle this in Racket first.
+
+Racket code files:
 
 <x>-test :- unit tests for <x>
-images/ :- sample images for testing
-spec-gif89a.txt :- Graphics Interchange Format specification
 bits-and-bytes :- simple conversion
+lookit :- print all bytes for debugging
 gif-split :- procedures for parsing a GIF file. Currently these work as:
 
 (gif: function-name filename args ...)
@@ -17,8 +22,12 @@ However this is only for testing purposes; the final version will hide these and
 
 (define my-gif (gif filename))
 (gif-metadata my-gif)
-(gif-images my-gif)
+(gif-stills my-gif)
 
+Other files:
+images/ :- sample images for testing
+spec-gif89a.txt :- Graphics Interchange Format specification
+comparison.xlsx :- spreadsheet comparing input and output byte-for-byte
 
 
 
