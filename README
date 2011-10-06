@@ -7,7 +7,9 @@ Description:
 
 There's plenty of "make animated GIF" apps around, but none that let you split an existing animated GIF up, play around with it and then reassemble it. This could be something vaguely useful and fun.
 
-This was intended to be a moderately challenging project for getting to grips with Objective-C and Xcode. But after a few hours work in Obj-C, I realised that not knowing the GIF spec was the bigger problem, so I decided to tackle this in Racket first.
+This was intended to be a moderately challenging project for getting to grips with Objective-C and an image format. But after a few hours work in Obj-C, I realised that not knowing the GIF spec was the bigger problem, so I decided to tackle this in Racket first. 
+
+(Racket includes this already: file/gif. But the point was the learning experience.)
 
 Racket code files:
 
