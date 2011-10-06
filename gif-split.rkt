@@ -7,12 +7,19 @@
          header
          trailer?
          gce?
-         gce
+         gce-size
+         gce-time
+         comment?
+         comment-size
+         plain-text?
+         plain-text-size
+         appn?
+         appn-size
          img?
          img-size
          img-dimensions
-         img
-         frames
+         images
+         timings
          gif-build
          gif:)
 
@@ -28,15 +35,17 @@
 (define (logical-size data)
   (extract-coord data 6))
 
+; extract an unsigned short
+(define (extract-short data byte)
+  (let ([x0 (bytes-ref data byte)]
+        [x1 (bytes-ref data (+ byte 1))])
+    (+ x0 (* x1 256))))
+
 ; extract any pair of unsigned shorts
 (define (extract-coord data byte)
-  (let ([x0 (bytes-ref data byte)]
-        [x1 (bytes-ref data (+ byte 1))]
-        [y0 (bytes-ref data (+ byte 2))]
-        [y1 (bytes-ref data (+ byte 3))])
     (cons
-     (+ x0 (* x1 256))
-     (+ y0 (* y1 256)))))
+     (extract-short data byte)
+     (extract-short data (+ byte 2))))
 
 (define (gct-size data)
   (let* ([packed-field (byte->bits (bytes-ref data 10))]
@@ -58,32 +67,32 @@
    (equal? (bytes-ref data byte) 59)))
 
 (define (extn? data byte)
-  (if [< (+ byte 2) (bytes-length data)]
-      (let* (; img descriptor marker (should be 0x21)
-             [id-0 (bytes-ref data byte)]
-             ; 2nd byte labels extension type
-             [id-1 (bytes-ref data (+ byte 1))]
-             ; 3rd byte is often block size
-             [id-2 (bytes-ref data (+ byte 2))])
-        (if [equal? id-0 33]
-            ; extension types:
-            (cond [(equal? id-1 254) #t] ; comment
-                  [(and
-                    (equal? id-0 33)
-                    (equal? id-1 249)
-                    (equal? id-2 4))
-                   #t] ; graphic control
-                  [(and
-                    (equal? id-1 255)
-                    (equal? id-2 11))
-                   #t] ; application
-                  [(and
-                    (equal? id-1 1)
-                    (equal? id-1 12))
-                   #t] ; plain text
-                  [else #f])
-            #f))
-      #f))
+  (or
+   (gce? data byte)
+   (comment? data byte)
+   (appn? data byte)
+   (plain-text? data byte)))
+
+(define (null-byte? data b)
+  (equal? (bytes-ref data b) 0))
+
+; traverse data sub-blocks
+(define (subblocks-size data b)
+  (let ([len (bytes-length data)])
+    (cond [(> b len) (error "subblocks-size: exceeded EOF")]
+          [(or
+            ; more efficiency here would be
+            ; a let with the bytes-refs
+            ; and pass these to the preds
+            (trailer? data b)
+            (img? data b)
+            (extn? data b))
+           b]
+          ; termination byte?
+          [(null-byte? data b) (+ b 1)]
+          [else 
+           ; jumps over subblocks
+           (subblocks-size data (+ b (bytes-ref data b) 1))])))
 
 (define (gce? data byte)
   (if [< (+ byte 6) (bytes-length data)]
@@ -102,15 +111,76 @@
          (equal? id-6 0)))
       #f))
 
+(define (gce-size data byte) 8)
+
+(define (gce-time data byte)
+  (/ (extract-short data (+ byte 4)) 100))
+
 ; deprecated
 (define (gce data byte)
   (if [gce? data byte]
       (subbytes data byte (+ byte 7))
       (error "Not a graphic control extension")))
 
-; looking up bytes takes time
-; could add gdims as an argument
-; to speed this procedure up
+(define (comment? data byte)
+  (if [< (+ byte 2) (bytes-length data)]
+      (let (; img descriptor marker (should be 0x21)
+            [id-0 (bytes-ref data byte)]
+            ; 2nd byte labels extension type
+            [id-1 (bytes-ref data (+ byte 1))])
+        (and 
+         (equal? id-0 33)
+         (equal? id-1 254)))
+      #f))
+
+(define (comment-size data byte)
+  (let* (; data sub-blocks start at 3rd byte
+         [data-first (+ byte 2)]
+         [sb-size (subblocks-size data data-first)])
+    (- sb-size byte)))
+
+; untested!
+(define (plain-text? data byte)
+  (if [< (+ byte 16) (bytes-length data)]
+      (let (; first byte should be extn marker
+            [id-0 (bytes-ref data byte)]
+            ; plain-text extension marker
+            [id-1 (bytes-ref data (+ byte 1))]
+            ; size marker is always 12
+            [id-2 (bytes-ref data (+ byte 2))])
+        (and
+         (equal? id-0 33)
+         (equal? id-1 1)
+         (equal? id-2 12)))
+      #f))
+
+; untested!
+(define (plain-text-size data byte)
+  (let* (; data sub-blocks start at 16th byte
+         [data-first (+ byte 15)]
+         [sb-size (subblocks-size data data-first)])
+    (- sb-size byte)))
+
+(define (appn? data byte)
+  (if [< (+ byte 16) (bytes-length data)]
+      (let (; first byte should be extn marker
+            [id-0 (bytes-ref data byte)]
+            ; application extension marker
+            [id-1 (bytes-ref data (+ byte 1))]
+            ; size marker is always 11
+            [id-2 (bytes-ref data (+ byte 2))])
+        (and
+         (equal? id-0 33)
+         (equal? id-1 255)
+         (equal? id-2 11)))
+      #f))
+
+(define (appn-size data byte)
+  (let* (; data sub-blocks start at 15th byte
+         [data-first (+ byte 14)]
+         [sb-size (subblocks-size data data-first)])
+    (- sb-size byte)))
+
 (define (img? data byte)
   (if [< (+ byte 9) (bytes-length data)]
       (let* (; img descriptor marker (should be 0x2C)
@@ -121,19 +191,6 @@
              [corner (img-corner data byte)]
              ; image dimensions 
              [idims (img-dimensions data byte)])
-        ; packed fields in img descriptor
-        ;[id-9 (byte->bits (bytes-ref data (+ byte 9)))]
-        ; is there a local color table?
-        ;[lct? (equal? (first id-9) 1)]
-        ; size of local color table
-        ;[lct-size (if lct?
-        ;             (expt 2 (+ 1 
-        ;                       (* 4 (sixth id-9)) 
-        ;                      (* 2 (seventh id-9))
-        ;                     (eighth id-9)))
-        ;         0)])
-        ; termination byte of img descriptor header
-        ;[id-term (bytes-ref data (+ byte 9 lct-size))])
         (and
          (equal? id-0 44)
          (<= (car idims) (car gdims))
@@ -159,21 +216,7 @@
          ; length of file
          [len (bytes-length data)])
     ; loop through data until not data
-    (define (img-size-iter b)
-      (cond [(> b len) (error "img-size: exceeded EOF")]
-            [(or
-              ; more efficiency here would be
-              ; a let with the bytes-refs
-              ; and pass these to the preds
-              (trailer? data b)
-              (img? data b)
-              (extn? data b))
-             (- b byte)]
-            [else 
-             ; jumps over subblocks
-             ; potential for error here
-             (img-size-iter (+ b (bytes-ref data b) 1))]))
-    (img-size-iter data-first))) 
+    (- (subblocks-size data data-first) byte))) 
 
 ; data on image descriptors
 (define (img-dimensions data byte)
@@ -188,25 +231,32 @@
       (subbytes data byte (+ byte (img-size data byte)))
       (error "Not an image descriptor" byte)))
 
-; return frames
-(define (frames data)
-  (subblocks data img? img-size))
-;(subblocks data gce? (lambda (data byte) 7)))
-
 ; return all instances of a particular kind of subblock
 (define (subblocks data pred? size)
   (define (sbs-iter byte sbs)
     (cond [(trailer? data byte) sbs]
           [(pred? data byte)
            (let ([s (size data byte)])
-             (sbs-iter (+ byte s) (cons (subbytes data byte (+ byte s)) sbs)))]
+             (sbs-iter (+ byte s) (stream-cons (subbytes data byte (+ byte s)) sbs)))]
           [else (sbs-iter (+ byte 1) sbs)]))
   (sbs-iter 0 '()))
 
-; ???
-(define (gif-build hdr img filename-out)
+; return frames
+(define (images data)
+  (subblocks data img? img-size))
+;(subblocks data gce? (lambda (data byte) 7)))
+
+; return times in every gce
+(define (timings data)
+  (stream-map (lambda (x) (gce-time x 0)) (subblocks data gce? gce-size)))  
+
+; make a gif
+(define (gif-build filename-out hdr blocks)
   (call-with-output-file filename-out
-    (lambda (out) (write-bytes (bytes-append hdr img #";") out))))
+    (lambda (out) 
+      (if [or (stream? blocks) (list? blocks)]
+          (write-bytes (bytes-append (apply bytes-append hdr (stream->list blocks)) #";") out)
+          (write-bytes (bytes-append hdr blocks #";") out)))))
 
 ; ahh
 (define-syntax-rule
@@ -219,3 +269,5 @@
 (define sunflower "images/Sunflower_as_gif_websafe.gif")
 (define sample "images/sample.gif")
 (define earth "images/Rotating_earth_(large).gif")
+(define earth-small "images/200px-Rotating_earth_(large).gif")
+(define newton "images/Newtons_cradle_animation_book_2.gif")
