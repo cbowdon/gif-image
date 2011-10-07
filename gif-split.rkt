@@ -29,9 +29,9 @@
 (require "bits-and-bytes.rkt")
 
 (define (gif? data)
-    (and
-     (equal? (subbytes data 0 3) #"GIF")
-     (equal? (bytes-ref data (- (bytes-length data) 1)) 59)))
+  (and
+   (equal? (subbytes data 0 3) #"GIF")
+   (equal? (bytes-ref data (- (bytes-length data) 1)) 59)))
 
 (define (version data)
   (bytes->string/utf-8 (subbytes data 3 (+ 3 3))))
@@ -235,10 +235,19 @@
       (subbytes data byte (+ byte (img-size data byte)))
       (error "Not an image descriptor" byte)))
 
+; stream-reverse
+; not convinced of benefits, but works
+(define (stream-reverse x)
+  (define (stream-reverse-iter x y)
+    (if [stream-empty? x]
+        y
+        (stream-reverse-iter (stream-rest x) (stream-cons (stream-first x) y))))
+  (stream-reverse-iter x empty-stream))
+
 ; return all instances of a particular kind of subblock
 (define (subblocks data pred? size)
   (define (sbs-iter byte sbs)
-    (cond [(trailer? data byte) sbs]
+    (cond [(trailer? data byte) (stream-reverse sbs)]
           [(pred? data byte)
            (let ([s (size data byte)])
              (sbs-iter (+ byte s) (stream-cons (subbytes data byte (+ byte s)) sbs)))]
