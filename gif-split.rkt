@@ -9,19 +9,21 @@
          gce?
          gce-size
          gce-time
-         comment?
-         comment-size
-         plain-text?
-         plain-text-size
-         appn?
-         appn-size
          img?
          img-size
          img-dimensions
-         frames
+         gce-imgs
          timings
-         comments
          animated?
+         comment?
+         comment-size
+         comments
+         plain-text?
+         plain-text-size
+         plain-texts
+         appn?
+         appn-size
+         appns
          gif-build
          images
          gif:)
@@ -254,10 +256,20 @@
           [else (sbs-iter (+ byte 1) sbs)]))
   (sbs-iter 0 '()))
 
-; return frames
-(define (frames data)
-  (subblocks data img? img-size))
-;(subblocks data gce? (lambda (data byte) 7)))
+; return all images
+; with the GCE attached if available
+(define (gce-imgs data)
+  (define (gi-iter byte gis)
+    (cond [(trailer? data byte) (stream-reverse gis)]
+          [(gce? data byte)
+           (let* ([gs (gce-size data byte)]
+                  [size (+ gs (img-size data (+ byte gs)))])
+             (gi-iter (+ byte size) (stream-cons (subbytes data byte (+ byte size)) gis)))]
+          [(img? data byte)
+           (let ([size (img-size data byte)])
+             (gi-iter (+ byte size) (stream-cons (subbytes data byte (+ byte size)) gis)))]
+          [else (gi-iter (+ byte 1) gis)]))
+  (gi-iter 0 '()))
 
 ; is animated?
 (define (animated? data)
@@ -271,8 +283,18 @@
 (define (comments data)
   (stream-map 
    ; assumes no comment > 256 bytes
-   (lambda (x) (bytes->string/utf-8 (subbytes x 3 (- (bytes-length x) 1)))) 
+   (lambda (x) (subbytes x 3 (- (bytes-length x) 1))) 
    (subblocks data comment? comment-size)))
+
+; return all app extns
+(define (appns data)
+  (subblocks data appn? appn-size))
+
+(define (plain-texts data)
+  (subblocks data plain-text? plain-text-size))
+
+(define (gces data)
+  (subblocks data gce? gce-size))
 
 ; make a gif
 (define (gif-build filename-out hdr blocks)
@@ -286,7 +308,7 @@
 (define (images data)
   (stream-map
    (lambda (x) (bytes-append (header data) x #";"))
-   (subblocks data img? img-size)))
+   (gce-imgs data)))
 
 ; ahh
 (define-syntax-rule
