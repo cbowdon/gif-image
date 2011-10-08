@@ -9,9 +9,11 @@
          gce?
          gce-size
          gce-time
+         gces
          img?
          img-size
          img-dimensions
+         imgs
          gce-imgs
          timings
          animated?
@@ -295,6 +297,9 @@
 
 (define (gces data)
   (subblocks data gce? gce-size))
+
+(define (imgs data)
+  (subblocks data img? img-size))
 
 ; make a gif
 (define (gif-build filename-out hdr blocks)
