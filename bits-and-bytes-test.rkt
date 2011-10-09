@@ -1,10 +1,13 @@
 #lang racket
 
 (require rackunit
+         rackunit/text-ui
          "bits-and-bytes.rkt")
 
 (define/provide-test-suite
+  
   bits-and-bytes
+  
   (test-case
    "Test byte->bits with some known values"
    (check-equal? (byte->bits 255) '(1 1 1 1 1 1 1 1))
@@ -28,8 +31,15 @@
          (begin (check-equal? (bits->byte (byte->bits x)) x)
                 (loop-test (+ x 1)))
          #t))
-   (loop-test 0)))
-
-(require rackunit/text-ui)
-(run-tests bits-and-bytes)
-
+   (loop-test 0))
+  
+  ; not really req'd?
+  (test-case
+   "Test bytes->short with some known values"
+   (check-equal? (bytes->short (bytes 0 0)) 0)
+   (check-equal? (bytes->short (bytes 9 0)) 9)
+   (check-equal? (bytes->short (bytes 0 1)) 256))
+  
+  (test-case
+   "Test bytes->coord with some known values"
+   (check-equal? (bytes->coord (bytes 0 0 0 0)) (cons 0 0))))
