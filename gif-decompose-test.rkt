@@ -15,7 +15,7 @@
 
 (define/provide-test-suite
   
-  gif-decompose-tests
+  decompose-tests
   
   (test-case
    "gif? recognises gifs"
@@ -31,10 +31,13 @@
    (check-equal? (gif-dimensions sample) (cons 3 3)))
   
   (test-case
-   "gif-images returns 44 valid images for earth"
-   (let ([stills (gif-images earth)]) ; don't change
-     (check-equal? (stream-length stills) 44)
+   "gif-images returns 44 valid images for earth and earth-small"
+   (let ([stills (gif-images earth)]
+         [small-stills (gif-images earth-small)])
+     (check-equal? (stream-length stills) 44)     
      (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) stills)
+     (check-equal? (stream-length small-stills) 44)
+     (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) small-stills)
      (check-equal? (stream-length (gif-images sample)) 1)
      (check-equal? (gif? (stream-first (gif-images sample))) #t)
      (check-equal? (stream-length (gif-images sunflower)) 1)

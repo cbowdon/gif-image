@@ -12,6 +12,15 @@
 (require "gif-basics.rkt"
          "bits-and-bytes.rkt")
 
+;;;;;;;;;;;;;
+(define sunflower "images/Sunflower_as_gif_websafe.gif")
+(define sample "images/sample.gif")
+(define earth "images/Rotating_earth_(large).gif")
+(define earth-small "images/200px-Rotating_earth_(large).gif")
+(define newton "images/Newtons_cradle_animation_book_2.gif")
+(define my "images/my.gif")
+;;;;;;;;;;;;;
+
 (define (read-gif x)
   (cond [(bytes? x) x]
         [(or (path? x) (string? x))
@@ -47,6 +56,31 @@
                (gi-iter (+ byte size) (stream-cons (subbytes data byte (+ byte size)) gis)))]
             [else (gi-iter (+ byte 1) gis)]))
     (stream-map (lambda (x) (bytes-append hdr x trl)) (gi-iter 0 empty-stream))))
+
+; debugging use only
+(define (gif-copy x filename-out)
+  (let* ([data (read-gif x)]
+         [hdr (subbytes data 0 (header-size data))]
+         [trl #";"])
+    ; return all images
+    ; with the GCE attached if available
+    (define (gi-iter byte gis)
+      (cond [(trailer? data byte) (stream-reverse gis)]
+            [(gce? data byte)
+             (let* ([gs (gce-size data byte)]                  
+                    [size (if (img? data (+ byte gs))
+                              (+ gs (img-size data (+ byte gs)))
+                              gs)])
+               (gi-iter (+ byte size) (stream-cons (subbytes data byte (+ byte size)) gis)))]
+            [(img? data byte)
+             (let ([size (img-size data byte)])
+               (gi-iter (+ byte size) (stream-cons (subbytes data byte (+ byte size)) gis)))]
+            [else (gi-iter (+ byte 1) gis)]))
+    (call-with-output-file filename-out
+      (lambda (out)
+        (write-bytes
+         (bytes-append (apply bytes-append hdr (stream->list (gi-iter 0 empty-stream))) trl) 
+         out)))))
 
 ; more than one image?
 (define (gif-animated? x)

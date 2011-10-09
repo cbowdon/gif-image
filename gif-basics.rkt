@@ -150,7 +150,7 @@
     (- (subblocks-size data data-first) byte)))
 
 (define (gce? data byte)
-  (if [< (+ byte 6) (bytes-length data)]
+  (if [< (+ byte 7) (bytes-length data)]
       (let (; first byte should be extn marker
             [id-0 (bytes-ref data byte)]
             ; graphic control extension marker
@@ -158,12 +158,12 @@
             ; size marker is always 4
             [id-2 (bytes-ref data (+ byte 2))]
             ; termination byte
-            [id-6 (bytes-ref data (+ byte 6))])
+            [id-7 (bytes-ref data (+ byte 7))])
         (and
          (equal? id-0 33)
          (equal? id-1 249)
          (equal? id-2 4)
-         (equal? id-6 0)))
+         (equal? id-7 0)))
       #f))
 
 (define (gce-size data byte) 8)
