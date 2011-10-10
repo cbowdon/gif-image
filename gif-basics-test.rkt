@@ -91,5 +91,16 @@
    (check-equal? (gif: trailer? sunflower (- (file-size sunflower) 1)) #t)
    (check-equal? (gif: trailer? sample (- (file-size sample) 1)) #t)
    (check-equal? (gif: trailer? earth (- (file-size earth) 1)) #t)
-   (check-equal? (gif: trailer? earth 4) #f)))
+   (check-equal? (gif: trailer? earth 4) #f))
+  
+  (test-case
+   "gif: find-next-n works"
+   (check-equal? (gif: find-next-n earth-small 0 gce? gce-size 1) 781)
+   (check-equal? (gif: find-next-n earth-small 0 img? img-size 1) 890)
+   (check-equal? (gif: find-next-n earth-small 0 gce? gce-size 2) 14164)
+   (check-equal? (gif: find-next-n newton 294137 img? img-size 1) 294145)
+   (check-equal? (gif: find-next-n newton 294137 gce? gce-size 2) 298837)
+   (check-equal? (gif: find-next-n newton 298837 img? img-size 1) 298845)
+   (check-equal? (gif: find-next-n newton 303954 img? img-size 1) 303962)))
 
+(run-tests basics-tests)

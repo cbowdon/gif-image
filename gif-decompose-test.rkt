@@ -33,11 +33,14 @@
   (test-case
    "gif-images returns 44 valid images for earth and earth-small"
    (let ([stills (gif-images earth)]
-         [small-stills (gif-images earth-small)])
+         [small-stills (gif-images earth-small)]
+         [newton-stills (gif-images newton)])
      (check-equal? (stream-length stills) 44)     
      (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) stills)
      (check-equal? (stream-length small-stills) 44)
      (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) small-stills)
+     (check-equal? (stream-length newton-stills) 36)
+     (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) newton-stills)     
      (check-equal? (stream-length (gif-images sample)) 1)
      (check-equal? (gif? (stream-first (gif-images sample))) #t)
      (check-equal? (stream-length (gif-images sunflower)) 1)
@@ -62,3 +65,5 @@
    (let ([cmts (gif-comments sample)])
      (check-equal? (stream-length cmts) 1)
      (check-equal? (stream-first cmts) #"Chris Bowdon"))))
+
+(run-tests decompose-tests)

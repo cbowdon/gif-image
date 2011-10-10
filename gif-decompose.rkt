@@ -44,12 +44,11 @@
     ; return all images
     ; with the GCE attached if available
     (define (gi-iter byte gis)
-      (cond [(trailer? data byte) (stream-reverse gis)]
+      (cond [(trailer? data byte) (stream-reverse gis)]            
             [(gce? data byte)
-             (let* ([gs (gce-size data byte)]                  
-                    [size (if (img? data (+ byte gs))
-                              (+ gs (img-size data (+ byte gs)))
-                              gs)])
+             (let* ([gs (gce-size data byte)]
+                    [img-byte (find-next-n data byte img? img-size 1)]
+                    [size (- (+ img-byte (img-size data img-byte)) byte)])
                (gi-iter (+ byte size) (stream-cons (subbytes data byte (+ byte size)) gis)))]
             [(img? data byte)
              (let ([size (img-size data byte)])
@@ -67,10 +66,9 @@
     (define (gi-iter byte gis)
       (cond [(trailer? data byte) (stream-reverse gis)]
             [(gce? data byte)
-             (let* ([gs (gce-size data byte)]                  
-                    [size (if (img? data (+ byte gs))
-                              (+ gs (img-size data (+ byte gs)))
-                              gs)])
+             (let* ([gs (gce-size data byte)]
+                    [img-byte (find-next-n data byte img? img-size 1)]
+                    [size (- (+ img-byte (img-size data img-byte)) byte)])
                (gi-iter (+ byte size) (stream-cons (subbytes data byte (+ byte size)) gis)))]
             [(img? data byte)
              (let ([size (img-size data byte)])

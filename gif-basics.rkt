@@ -15,6 +15,7 @@
          trailer?
          stream-reverse         
          has-n-subblocks?
+         find-next-n
          subblocks)
 
 (require "bits-and-bytes.rkt")
@@ -31,20 +32,23 @@
           [else (sbs-iter (+ byte 1) sbs)]))
   (sbs-iter 0 '()))
 
+; find nth next subblock
+; returns #f if no nth subblock
+(define (find-next-n data byte pred? size n)
+  (define (fn-iter b count)
+    (cond [(equal? count n) (- b 1)]
+          [(>= b (bytes-length data)) #f]
+          [(pred? data b) (fn-iter (+ b 1) (+ count 1))]
+          [else (fn-iter (+ b 1) count)]))
+  (fn-iter byte 0))
+
 ; not efficient 
 ; and
 ; only tested implicitly
 (define (has-n-subblocks? data pred? size n)
-  (define (h-iter byte count)
-    (cond [(equal? count n) #t]
-          [(trailer? data byte) #f]
-          [(pred? data byte)
-           (h-iter (+ byte (size data byte)) (+ count 1))]
-          [else (h-iter (+ byte 1) count)]))
-  (h-iter 0 0))
+  (not (false? (find-next-n data 0 pred? size n))))
 
-
-; traverse data sub-blocks
+; traverse data subblocks
 (define (subblocks-size data b)
   (let ([len (bytes-length data)])
     (cond [(> b len) (error "subblocks-size: exceeded EOF")]
