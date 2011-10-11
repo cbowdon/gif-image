@@ -3,7 +3,7 @@
 (provide gif?
          gif-dimensions
          gif-images
-         ;gif-write-images
+         gif-write-images
          gif-animated?
          gif-timings
          gif-comments
@@ -55,6 +55,19 @@
                (gi-iter (+ byte size) (stream-cons (subbytes data byte (+ byte size)) gis)))]
             [else (gi-iter (+ byte 1) gis)]))
     (stream-map (lambda (x) (bytes-append hdr x trl)) (gi-iter 0 empty-stream))))
+
+(define (gif-write-images x outfile)
+  (define (writer imgs count)
+    (let ([name (path-replace-suffix outfile (string-append "-" (number->string count) ".gif"))])
+      (cond [(stream-empty? imgs) #t]
+            [else 
+             (begin
+               (displayln name)
+               (call-with-output-file name
+                 (lambda (out) (write-bytes (stream-first imgs) out)))
+               (writer (stream-rest imgs) (+ count 1)))])))
+  (writer (gif-images x) 0))
+
 
 ; debugging use only
 (define (gif-copy x filename-out)

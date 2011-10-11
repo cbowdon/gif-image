@@ -14,15 +14,8 @@ Racket code files:
 <x>-test :- unit tests for <x>
 bits-and-bytes :- simple conversion
 lookit :- print all bytes for debugging
-gif-split :- procedures for parsing a GIF file. Currently these work as:
-
-(gif: function-name filename args ...)
-
-However this is only for testing purposes; the final version will hide these and expose only something like:
-
-(define my-gif (gif filename))
-(gif-metadata my-gif)
-(gif-stills my-gif)
+gif-basics :- predicates, size-calculators and other utilities
+gif-decompose :- API
 
 Other files:
 images/ :- sample images for testing
