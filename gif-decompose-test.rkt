@@ -66,4 +66,5 @@
      (check-equal? (stream-length cmts) 1)
      (check-equal? (stream-first cmts) #"Chris Bowdon"))))
 
-(run-tests decompose-tests)
+; run the tests
+;(run-tests decompose-tests)

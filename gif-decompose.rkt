@@ -12,15 +12,6 @@
 (require "gif-basics.rkt"
          "bits-and-bytes.rkt")
 
-;;;;;;;;;;;;;
-(define sunflower "images/Sunflower_as_gif_websafe.gif")
-(define sample "images/sample.gif")
-(define earth "images/Rotating_earth_(large).gif")
-(define earth-small "images/200px-Rotating_earth_(large).gif")
-(define newton "images/Newtons_cradle_animation_book_2.gif")
-(define my "images/my.gif")
-;;;;;;;;;;;;;
-
 (define (read-gif x)
   (cond [(bytes? x) x]
         [(or (path? x) (string? x))
@@ -62,7 +53,6 @@
       (cond [(stream-empty? imgs) #t]
             [else 
              (begin
-               (displayln name)
                (call-with-output-file name
                  (lambda (out) (write-bytes (stream-first imgs) out)))
                (writer (stream-rest imgs) (+ count 1)))])))

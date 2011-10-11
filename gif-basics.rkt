@@ -20,9 +20,11 @@
 
 (require "bits-and-bytes.rkt")
 
+; in subblocks
 ; could achieve much more efficiency by jumping over recognised extensions
 
 ; return all instances of a particular kind of subblock
+; only tested implicitly
 (define (subblocks data pred? size)
   (define (sbs-iter byte sbs)
     (cond [(trailer? data byte) (stream-reverse sbs)]
@@ -34,6 +36,7 @@
 
 ; find nth next subblock
 ; returns #f if no nth subblock
+; only tested implicitly
 (define (find-next-n data byte pred? size n)
   (define (fn-iter b count)
     (cond [(equal? count n) (- b 1)]
@@ -42,9 +45,6 @@
           [else (fn-iter (+ b 1) count)]))
   (fn-iter byte 0))
 
-; not efficient 
-; and
-; only tested implicitly
 (define (has-n-subblocks? data pred? size n)
   (not (false? (find-next-n data 0 pred? size n))))
 
@@ -64,7 +64,8 @@
            (subblocks-size data (+ b (bytes-ref data b) 1))])))
 
 ; stream-reverse
-; not convinced of benefits, but works
+; fairly sure this negates stream advantages
+; so use only when necessary
 (define (stream-reverse x)
   (define (stream-reverse-iter x y)
     (if [stream-empty? x]
@@ -102,6 +103,7 @@
 (define (header-size data)
   (+ 13 (* 3 (gct-size data))))
 
+; general extension predicate
 (define (extn? data byte)
   (or
    (gce? data byte)
@@ -183,6 +185,12 @@
          (equal? id-1 254)))
       #f))
 
+(define (comment-size data byte)
+  (let* (; data sub-blocks start at 3rd byte
+         [data-first (+ byte 2)]
+         [sb-size (subblocks-size data data-first)])
+    (- sb-size byte)))
+
 (define (appn? data byte)
   (if [< (+ byte 16) (bytes-length data)]
       (let (; first byte should be extn marker
@@ -200,12 +208,6 @@
 (define (appn-size data byte)
   (let* (; data sub-blocks start at 15th byte
          [data-first (+ byte 14)]
-         [sb-size (subblocks-size data data-first)])
-    (- sb-size byte)))
-
-(define (comment-size data byte)
-  (let* (; data sub-blocks start at 3rd byte
-         [data-first (+ byte 2)]
          [sb-size (subblocks-size data data-first)])
     (- sb-size byte)))
 
