@@ -12,6 +12,8 @@
 (define earth "images/Rotating_earth_(large).gif")
 (define earth-small "images/200px-Rotating_earth_(large).gif")
 (define newton "images/Newtons_cradle_animation_book_2.gif")
+(define shoe "images/200px-BananaShoeShine.gif")
+(define honey "images/honeycakecoffee.gif")
 (define my "images/my.gif")
 
 (define-syntax-rule
@@ -51,17 +53,22 @@
    (let ([actual-size-1 (- 37563 808)]
          [calcd-size-1 (gif: img-size earth 808)]
          [actual-size-2 (- 73553 37571)]
-         [calcd-size-2 (gif: img-size earth 37571)])
+         [calcd-size-2 (gif: img-size earth 37571)]
+         [actual-size-3 (- 114695 81475)]
+         [calcd-size-3 (gif: img-size honey 81475)])
      ; note that subsequent frames may be diff size
      (check-equal? (gif: img? earth 808) #t)
      (check-equal? calcd-size-1 actual-size-1)
      (check-equal? (gif: img? earth 37571) #t)
-     (check-equal? calcd-size-2 actual-size-2)))
-  
+     (check-equal? calcd-size-2 actual-size-2)
+     (check-equal? (gif: img? honey 81475) #t)
+     (check-equal? calcd-size-3 actual-size-3)))
+   
   (test-case
    "gif: gce? recognises graphic control extensions"
    (check-equal? (gif: gce? earth 800) #t)
-   (check-equal? (gif: gce? earth 801) #f))
+   (check-equal? (gif: gce? earth 801) #f)
+   (check-equal? (gif: gce? honey 81467) #t))
   
   (test-case
    "gif: gce-size is right"
