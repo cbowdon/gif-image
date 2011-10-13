@@ -1,13 +1,12 @@
 What it is:
 - collection of procedures to manipulate GIFs
 - extract still images, metadata, recombine
-- stepping stone to Obj-C code to do same
 
 Description:
 
 There's plenty of "make animated GIF" apps around, but none that let you split an existing animated GIF up, play around with it and then reassemble it. This could be something vaguely useful and fun.
 
-This was intended to be a moderately challenging project for getting to grips with Objective-C and an image format. But after a few hours work in Obj-C, I realised that not knowing the GIF spec was the bigger problem, so I decided to tackle this in Racket first. Racket already includes good procedures for creating GIFs (the file/gif module) but none for taking them apart.
+This was originally intended to be a moderately challenging project for getting to grips with Objective-C and an image format. But after a few hours work in Obj-C, I realised that not knowing the GIF spec was the bigger problem, so I decided to tackle this in Racket first. Racket already includes good procedures for creating GIFs (the file/gif module) but none for taking them apart. So this is something new.
 
 Racket code files:
 
