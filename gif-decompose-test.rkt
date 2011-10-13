@@ -2,6 +2,7 @@
 
 (require rackunit
          rackunit/text-ui
+         profile
          "gif-decompose.rkt")
 
 (define cwd (string->path "/Users/chris/Projects/gif-image/"))
@@ -67,4 +68,5 @@
      (check-equal? (stream-first cmts) #"Chris Bowdon"))))
 
 ; run the tests
-;(run-tests decompose-tests)
+(run-tests decompose-tests)
+(profile-thunk (lambda () (gif-timings earth)))

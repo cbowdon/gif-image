@@ -1,14 +1,5 @@
 #lang racket
 
-(provide gif?
-         gif-dimensions
-         gif-images
-         gif-write-images
-         gif-animated?
-         gif-timings
-         gif-comments
-         gif-print-blocks)
-
 (require "gif-basics.rkt"
          "bits-and-bytes.rkt")
 
@@ -19,11 +10,17 @@
         [else (error "read-gif: invalid input:" x)]))
 
 (define (gif? x)
-  (let ([data (read-gif x)])
-    (and
-     (header? data)
-     (has-n-subblocks? data img? img-size 1)
-     (trailer? data (- (bytes-length data) 1)))))
+  (if [not 
+       (or 
+        (bytes? x) 
+        (string? x) 
+        (path? x))]
+      #f
+      (let ([data (read-gif x)])
+        (and
+         (header? data)
+         (has-n-subblocks? data img? img-size 1)
+         (trailer? data (- (bytes-length data) 1))))))
 
 (define (gif-dimensions x)  
   (bytes->coord (read-gif x) 6))
@@ -139,9 +136,15 @@
     (loop 0)))
 
 
-
-
-
+(provide/contract
+ [gif? (-> (or/c string? path? bytes?) boolean?)]
+ [gif-dimensions (-> gif? pair?)]
+ [gif-images (-> gif? stream?)]
+ [gif-write-images (->* (gif? string?) any)]
+ [gif-animated? (-> gif? boolean?)]
+ [gif-timings (-> gif? stream?)]
+ [gif-comments (-> gif? stream?)]
+ [gif-print-blocks (-> gif? any)])
 
 
 
