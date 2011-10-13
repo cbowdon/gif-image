@@ -104,4 +104,4 @@
    (check-equal? (gif: find-next-n newton 303954 img? img-size 1) 303962)))
 
 ; run the tests
-;(run-tests basics-tests)
+(run-tests basics-tests)

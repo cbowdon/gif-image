@@ -34,6 +34,19 @@
           [else (sbs-iter (+ byte 1) sbs)]))
   (sbs-iter 0 '()))
 
+; traverse data subblocks
+(define (subblocks-size data b)
+  (let ([len (bytes-length data)])
+    (cond [(> b len) (- len 1)] ; EOF!
+          [(or
+            (trailer? data b)
+            (img? data b)
+            (extn? data b))
+           b]
+          [else 
+           ; jumps over subblocks
+           (subblocks-size data (+ b (bytes-ref data b) 1))])))
+
 ; find nth next subblock
 ; returns #f if no nth subblock
 ; only tested implicitly
@@ -47,21 +60,6 @@
 
 (define (has-n-subblocks? data pred? size n)
   (not (false? (find-next-n data 0 pred? size n))))
-
-; traverse data subblocks
-(define (subblocks-size data b)
-  (let ([len (bytes-length data)])
-    (cond [(> b len) (error "subblocks-size: exceeded EOF")]
-          [(or
-            (trailer? data b)
-            (img? data b)
-            (extn? data b))
-           b]
-          ; termination byte?
-          [(null-byte? data b) (+ b 1)]
-          [else 
-           ; jumps over subblocks
-           (subblocks-size data (+ b (bytes-ref data b) 1))])))
 
 ; stream-reverse
 ; fairly sure this negates stream advantages

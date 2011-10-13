@@ -5,13 +5,13 @@
          profile
          "gif-decompose.rkt")
 
-(define cwd (string->path "/Users/chris/Projects/gif-image/"))
-
 (define sunflower "images/Sunflower_as_gif_websafe.gif")
 (define sample "images/sample.gif")
 (define earth "images/Rotating_earth_(large).gif")
 (define earth-small "images/200px-Rotating_earth_(large).gif")
 (define newton "images/Newtons_cradle_animation_book_2.gif")
+(define shoe "images/200px-BananaShoeShine.gif")
+(define honey "images/honeycakecoffee.gif")
 (define my "images/my.gif")
 
 (define/provide-test-suite
@@ -23,7 +23,7 @@
    (for-each
     (lambda (x) (check-equal? (gif? (build-path "images" x)) #t))
     (filter (lambda (x) (regexp-match "gif" x)) (directory-list "images")))
-   (check-equal? (gif? (build-path cwd "images/kif.png")) #f))
+   (check-equal? (gif? "images/kif.png") #f))
   
   (test-case
    "gif-dimensions gives correct logical size"
@@ -35,13 +35,19 @@
    "gif-images returns 44 valid images for earth and earth-small"
    (let ([stills (gif-images earth)]
          [small-stills (gif-images earth-small)]
-         [newton-stills (gif-images newton)])
+         [newton-stills (gif-images newton)]
+         [shoe-stills (gif-images shoe)]
+         [honey-stills (gif-images honey)])
      (check-equal? (stream-length stills) 44)     
      (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) stills)
      (check-equal? (stream-length small-stills) 44)
      (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) small-stills)
      (check-equal? (stream-length newton-stills) 36)
      (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) newton-stills)     
+     (check-equal? (stream-length shoe-stills) 34)
+     (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) shoe-stills)          
+     (check-equal? (stream-length honey-stills) 4)
+     (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) honey-stills)          
      (check-equal? (stream-length (gif-images sample)) 1)
      (check-equal? (gif? (stream-first (gif-images sample))) #t)
      (check-equal? (stream-length (gif-images sunflower)) 1)
@@ -69,4 +75,4 @@
 
 ; run the tests
 (run-tests decompose-tests)
-(profile-thunk (lambda () (gif-timings earth)))
+;(profile-thunk (lambda () (gif-timings earth)))
