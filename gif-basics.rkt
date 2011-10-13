@@ -16,7 +16,8 @@
          stream-reverse         
          has-n-subblocks?
          find-next-n
-         subblocks)
+         subblocks
+         gif:)
 
 (require "bits-and-bytes.rkt")
 
@@ -236,7 +237,13 @@
    (equal? byte (- (bytes-length data) 1))
    (equal? (bytes-ref data byte) 59)))
 
-
+; for handy testing
+(define-syntax-rule
+  (gif: function filename args ...)
+  (call-with-input-file filename
+    (lambda (in) 
+      (let ([data (read-bytes (file-size filename) in)])        
+        (function data args ...)))))
 
 
 

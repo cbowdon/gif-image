@@ -2,9 +2,8 @@
 
 (require rackunit
          rackunit/text-ui
+         profile
          "gif-basics.rkt")
-
-(define cwd (string->path "/Users/chris/Projects/gif-image/"))
 
 (define kif "images/kif.png")
 (define sunflower "images/Sunflower_as_gif_websafe.gif")
@@ -16,12 +15,6 @@
 (define honey "images/honeycakecoffee.gif")
 (define my "images/my.gif")
 
-(define-syntax-rule
-  (gif: function filename args ...)
-  (call-with-input-file filename
-    (lambda (in) 
-      (let ([data (read-bytes (file-size filename) in)])        
-        (function data args ...)))))
 
 (define/provide-test-suite
   basics-tests
