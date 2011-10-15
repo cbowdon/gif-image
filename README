@@ -13,13 +13,17 @@ Racket code files:
 <x>-test :- unit tests for <x>
 bits-and-bytes :- simple conversion
 lookit :- print all bytes for debugging
+info.rkt :- links to manual.html
 gif-basics :- predicates, size-calculators and other utilities
-gif-decompose :- API
+gif-decompose :- exposed API
 
 Other files:
 images/ :- sample images for testing
 spec-gif89a.txt :- Graphics Interchange Format specification
 comparison.xlsx :- spreadsheet comparing input and output byte-for-byte
+manual.html :- Documentation for this Racket module
+manual.scrbl :- Scribble code for manual.html
+*.css, *.js :- Supporting code for manual.html
 
 
 

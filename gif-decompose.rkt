@@ -87,9 +87,10 @@
 ; return times in every gce
 (define (gif-timings x)
   (let ([data (read-gif x)])
-    (stream-map 
-     (lambda (x) (/ (bytes->short x 4) 100))
-     (subblocks data gce? gce-size))))
+    (stream->list 
+     (stream-map 
+      (lambda (x) (/ (bytes->short x 4) 100))
+      (subblocks data gce? gce-size)))))
 
 ; return all the comments
 (define (gif-comments x)
@@ -104,47 +105,50 @@
     (define (loop b)
       (cond 
         [(trailer? data b)
-         (printf "~a\t\ttrailer\n" b)]
+         (begin
+           (printf "~a\t\tTrailer\n" b)
+           #t)]
         [(img? data b)
          (begin
-           (printf "~a\t\timg\n" b)
+           (printf "~a\t\tImage Descriptor\n" b)
            (loop (+ b (img-size data b))))]
         [(gce? data b)
          (begin
-           (printf "~a\t\tgce\n" b)
+           (printf "~a\t\tGraphic Control Extension\n" b)
            (loop (+ b (gce-size data b))))]
         [(appn? data b)
          (begin
-           (printf "~a\t\tappn\n" b)
+           (printf "~a\t\tApplication Extension\n" b)
            (loop (+ b (appn-size data b))))]
         [(comment? data b)
          (begin
-           (printf "~a\t\tcomment\n" b)
+           (printf "~a\t\tComment Extension\n" b)
            (loop (+ b (comment-size data b))))]
         [(plain-text? data b)
          (begin
-           (printf "~a\t\tplain-text\n" b)
+           (printf "~a\t\tPlain Text Extension\n" b)
            (loop (+ b (plain-text-size data b))))]
         [(header? data b)
          (begin
-           (printf "~a\t\theader\n" b)
+           (printf "~a\t\tHeader\n" b)
            (loop (+ b (header-size data))))]
         [else
          (begin
-           (printf "~a\t\tunknown\t~a\n" b (bytes-ref data b))
-           (loop (+ b 1)))])) 
+           (printf "~a\t\tUnknown\t~a\n" b (bytes-ref data b))
+           (loop (+ b 1)))]))
+    (printf "Byte\t\tBlock\n")
     (loop 0)))
 
 
 (provide/contract
- [gif? (-> (or/c string? path? bytes?) boolean?)]
+ [gif? (-> any/c boolean?)]
  [gif-dimensions (-> gif? pair?)]
  [gif-images (-> gif? stream?)]
- [gif-write-images (->* (gif? string?) any)]
+ [gif-write-images (->* (gif? string?) exact-nonnegative-integer?)]
  [gif-animated? (-> gif? boolean?)]
- [gif-timings (-> gif? stream?)]
+ [gif-timings (-> gif? (listof rational?))]
  [gif-comments (-> gif? stream?)]
- [gif-print-blocks (-> gif? any)])
+ [gif-print-blocks (-> gif? boolean?)])
 
 
 
