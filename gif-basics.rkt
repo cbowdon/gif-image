@@ -145,13 +145,14 @@
                                   (* 2 (seventh id-9))
                                   (eighth id-9)))
                        0)]
-         ; LZW-min-size 
-         [LZW-min (+ byte 9 lct-size 1)]
+         ; LZW-min-size ; not used
+         ;[LZW-min (+ byte 9 lct-size 1)]
          ; first byte of data subblocks
          [data-first (+ byte 9 lct-size 2)]
-         ; length of file
-         [len (bytes-length data)])
-    ; loop through data until not data
+         ; length of file ; not used
+         ;[len (bytes-length data)]
+         ; loop through data until not data
+         )
     (- (subblocks-size data data-first) byte)))
 
 (define (gce? data byte)
