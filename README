@@ -2,6 +2,9 @@ What it is:
 - collection of procedures to manipulate GIFs
 - extract still images, metadata, recombine
 
+Status: 
+Complete! Could submit to PLaneT, but probably not worth it considering the low expected demand.
+
 Description:
 
 There's plenty of "make animated GIF" apps around, but none that let you split an existing animated GIF up, play around with it and then reassemble it. This could be something vaguely useful and fun.
@@ -25,5 +28,5 @@ manual.html :- Documentation for this Racket module
 manual.scrbl :- Scribble code for manual.html
 *.css, *.js :- Supporting code for manual.html
 
-
+[KEYWORDS: racket, functional, scribble, gif, images]
 
