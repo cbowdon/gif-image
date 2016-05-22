@@ -1,5 +1,9 @@
-#lang racket
-
+#lang racket/base
+; gif-basics.rkt
+(require racket/bool
+         racket/list
+         racket/stream
+         "bits-and-bytes.rkt")
 (provide header?
          header-size
          img?
@@ -18,8 +22,6 @@
          find-next-n
          subblocks
          gif:)
-
-(require "bits-and-bytes.rkt")
 
 ; in subblocks
 ; could achieve much more efficiency by jumping over recognised extensions

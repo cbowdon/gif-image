@@ -1,9 +1,9 @@
-#lang racket
-
+#lang racket/base
+; gif-basics-test.rkt
 (require rackunit
          rackunit/text-ui
          profile
-         "gif-basics.rkt")
+         "../gif-basics.rkt")
 
 (define kif "images/kif.png")
 (define sunflower "images/Sunflower_as_gif_websafe.gif")

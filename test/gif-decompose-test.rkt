@@ -1,9 +1,10 @@
-#lang racket
-
-(require rackunit
+#lang racket/base
+; gif-decompose-test.rkt
+(require profile
+         racket/stream
+         rackunit
          rackunit/text-ui
-         profile
-         "gif-decompose.rkt")
+         "../gif-decompose.rkt")
 
 (define sunflower "images/Sunflower_as_gif_websafe.gif")
 (define sample "images/sample.gif")
@@ -44,7 +45,7 @@
      (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) small-stills)
      (check-equal? (stream-length newton-stills) 36)
      (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) newton-stills)     
-     (check-equal? (stream-length shoe-stills) 34)
+     (check-equal? (stream-length shoe-stills) 14)
      (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) shoe-stills)          
      (check-equal? (stream-length honey-stills) 4)
      (stream-for-each (lambda (x) (check-equal? (gif? x) #t)) honey-stills)          

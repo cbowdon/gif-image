@@ -4,13 +4,20 @@
 /* Monospace: */
 .RktIn, .RktRdr, .RktPn, .RktMeta,
 .RktMod, .RktKw, .RktVar, .RktSym,
-.RktRes, .RktOut, .RktCmt, .RktVal {
+.RktRes, .RktOut, .RktCmt, .RktVal,
+.RktBlk {
   font-family: monospace;
+  white-space: inherit;
 }
 
 /* Serif: */
 .inheritedlbl {
   font-family: serif;
+}
+
+/* Sans-serif: */
+.RBackgroundLabelInner {
+  font-family: sans-serif;
 }
 
 /* ---------------------------------------- */
@@ -67,7 +74,6 @@
 
 .RktKw {
   color: black;
-  /* font-weight: bold; */
 }
 
 .RktErr {
@@ -84,9 +90,15 @@
   color: #262680;
 }
 
+.RktSymDef { /* used with RktSym at def site */
+}
+
 .RktValLink {
   text-decoration: none;
   color: blue;
+}
+
+.RktValDef { /* used with RktValLink at def site */
 }
 
 .RktModLink {
@@ -97,7 +109,9 @@
 .RktStxLink {
   text-decoration: none;
   color: black;
-  /* font-weight: bold; */
+}
+
+.RktStxDef { /* used with RktStxLink at def site */
 }
 
 .RktRes {
@@ -123,15 +137,26 @@
   width: 100%;
 }
 
+.prototype, .argcontract, .RBoxed {
+  white-space: nowrap;
+}
+
 .prototype td {
   vertical-align: text-top;
 }
-.longprototype td {
-  vertical-align: bottom;
+
+.RktBlk {
+  white-space: inherit;
+  text-align: left;
+}
+
+.RktBlk tr {
+  white-space: inherit;
 }
 
 .RktBlk td {
   vertical-align: baseline;
+  white-space: inherit;
 }
 
 .argcontract td {
@@ -166,8 +191,6 @@
 }
 
 .Rfilebox {
-  margin-left: 1em;
-  margin-right: 1em;
 }
 
 .Rfiletitle {
@@ -185,4 +208,42 @@
 
 .Rfilecontent {
   margin: 0em 0em 0em 0em;
+}
+
+.RpackageSpec {
+  padding-right: 0.5em;
+}
+
+/* ---------------------------------------- */
+/* For background labels */
+
+.RBackgroundLabel {
+   float: right;
+   width: 0px;
+   height: 0px;
+}
+
+.RBackgroundLabelInner {
+   position: relative;
+   width: 25em;
+   left: -25.5em;
+   top: 0px;
+   text-align: right;
+   color: white;
+   z-index: 0;
+   font-weight: bold;
+}
+
+.RForeground {
+   position: relative;
+   left: 0px;
+   top: 0px;
+   z-index: 1;
+}
+
+/* ---------------------------------------- */
+/* History */
+
+.SHistory {
+  font-size: 82%;
 }
