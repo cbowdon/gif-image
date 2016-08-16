@@ -1,8 +1,8 @@
-#lang racket
-
+#lang racket/base
+; bits-and-bytes-test.rkt
 (require rackunit
          rackunit/text-ui
-         "bits-and-bytes.rkt")
+         "../bits-and-bytes.rkt")
 
 (define/provide-test-suite
   

@@ -1,7 +1,9 @@
-#lang racket
-
-(require "gif-basics.rkt"
-         "bits-and-bytes.rkt")
+#lang racket/base
+; gif-decompose.rkt
+(require racket/contract
+         racket/stream
+         "bits-and-bytes.rkt"
+         "gif-basics.rkt")
 
 (define (read-gif x)
   (cond [(bytes? x) x]
@@ -139,7 +141,6 @@
     (printf "Byte\t\tBlock\n")
     (loop 0)))
 
-
 (provide/contract
  [gif? (-> any/c boolean?)]
  [gif-dimensions (-> gif? pair?)]
@@ -149,9 +150,3 @@
  [gif-timings (-> gif? (listof rational?))]
  [gif-comments (-> gif? stream?)]
  [gif-print-blocks (-> gif? boolean?)])
-
-
-
-
-
-
