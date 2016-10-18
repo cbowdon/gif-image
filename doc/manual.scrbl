@@ -52,3 +52,7 @@ Additional helper procedures are provided for extracting metadata and debugging.
  the entire GIF file.
 }
 
+@defproc[(gif-cumulative? [g gif?]) boolean?]{
+  Reports if the GIF @racket[g]'s Graphic Control Extension calls for the frames to be
+  stacked on one another.
+}
