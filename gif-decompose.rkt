@@ -7,7 +7,7 @@
 
 (define (read-gif x)
   (cond [(bytes? x) x]
-        [(or (path? x) (string? x))
+        [(path-string? x)
          (call-with-input-file x (lambda (in) (read-bytes (file-size x) in)))]
         [else (error "read-gif: invalid input:" x)]))
 
@@ -141,6 +141,16 @@
     (printf "Byte\t\tBlock\n")
     (loop 0)))
 
+; GIF graphics control extension
+; example: [(21 F9 04 00) (00 00 00 00)]
+; 21 F9 04 05 ... -> cumulative
+; 21 F9 04 09 ... -> replacement
+; control extension is placed on each frame,
+; so checking a single frame should be good
+(define (gif-cumulative? img)
+  (define bytes (read-gif img))
+  (list? (regexp-match #"!\371\4\5" bytes)))
+
 (provide/contract
  [gif? (-> any/c boolean?)]
  [gif-dimensions (-> gif? pair?)]
@@ -149,4 +159,5 @@
  [gif-animated? (-> gif? boolean?)]
  [gif-timings (-> gif? (listof rational?))]
  [gif-comments (-> gif? stream?)]
- [gif-print-blocks (-> gif? boolean?)])
+ [gif-print-blocks (-> gif? boolean?)]
+ [gif-cumulative? (-> gif? boolean?)])
